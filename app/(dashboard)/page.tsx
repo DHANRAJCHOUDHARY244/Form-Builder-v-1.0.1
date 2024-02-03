@@ -1,5 +1,5 @@
-import { GetFormStats } from "@/actions/form"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { GetFormStats, GetForms } from "@/actions/form"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ReactNode, Suspense } from "react"
 import { LuView } from 'react-icons/lu'
@@ -7,6 +7,10 @@ import { FaWpforms } from 'react-icons/fa'
 import { HiCursorClick } from 'react-icons/hi'
 import { TbArrowBounce } from 'react-icons/tb'
 import { Separator } from "@/components/ui/separator"
+import CreateFormBtn from "@/components/CreateFormBtn"
+import { Form } from "@prisma/client"
+import { Badge } from "@/components/ui/badge"
+import { formatDistance } from "date-fns"
 const page = () => {
   return (
     <div className="container pt-4" >
@@ -15,6 +19,13 @@ const page = () => {
         <Separator className="my-6" />
         <h2 className="text-4xl font-bold col-span-2">Your Forms</h2>
         <Separator className="my-6" />
+        <div className='grid gric-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'><CreateFormBtn />
+          <Suspense fallback={[1, 2, 3, 4].map((el) => (
+          <FormCardSkeleton key={el} />
+          ))}>
+            <FormCards />
+          </Suspense>
+        </div>
       </Suspense>
     </div>
   )
@@ -56,7 +67,7 @@ function StatsCards(props: StatsCardProps) {
         title="Submission rate"
         icon={<HiCursorClick className='text-green-600' />}
         helperText={"Visits that result in submission"}
-        value={data?.submissionRate.toLocaleString()+'%' || ""}
+        value={data?.submissionRate.toLocaleString() + '%' || ""}
         loading={loading}
         className="shadow-md shadow-green-600"
       />
@@ -64,7 +75,7 @@ function StatsCards(props: StatsCardProps) {
         title="Bounce rate"
         icon={<TbArrowBounce className='text-red-600' />}
         helperText={"Visits that leaves without interacting"}
-        value={data?.bouncerate.toLocaleString()+'%' || ""}
+        value={data?.bouncerate.toLocaleString() + '%' || ""}
         loading={loading}
         className="shadow-md shadow-red-600"
       />
@@ -100,5 +111,43 @@ function StatsCard({ title, icon, helperText, value, loading, className }: {
         {helperText}
       </p>
     </CardContent>
+  </Card>
+}
+
+function FormCardSkeleton() {
+  return <Skeleton className="border-2 border-primary/20 h-[190px] w-full" />
+}
+
+async function FormCards() {
+  const form = await GetForms()
+  return <>
+    {
+      form.map(form => (
+        <FormCard key={form.id} form={form} />
+      ))
+    }
+  </>
+}
+
+function FormCard({ form }: {
+  form: Form
+}) {
+  return <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2 justify-between">
+        <span className='truncate font-bold' >
+          {form.name}
+        </span>
+        {form.published && <Badge>Published</Badge>}
+        {!form.published && <Badge variant={'destructive'} >Draft</Badge>}
+      </CardTitle>
+      <CardDescription>
+        {formatDistance(form.createdAt, new Date(), {addSuffix:true})}
+        {form.published && <span className="flex flex-center gap-2">
+          <LuView className="text-muted-foreground" />
+          <span>{form.visits.toLocaleString()}</span>
+        </span> }
+      </CardDescription>
+    </CardHeader>
   </Card>
 }
