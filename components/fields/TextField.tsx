@@ -7,7 +7,7 @@ const type: ElementType = "TextField";
 
 export const TextFieldFormElement: FormElement = {
     type,
-    construct:(id:string)=>({
+    construct:(id:string)=>({ 
         id,
         type,
         extraAttributes:{
